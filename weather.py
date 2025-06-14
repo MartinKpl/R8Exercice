@@ -9,9 +9,9 @@ headers = {
 city_coordinates_cache = {}
 weather_data_cache = {}
 
-def get_city_coordinates(city_name):
-    if city_name in city_coordinates_cache:
-        return city_coordinates_cache[city_name]
+def get_city_coordinates(city_name: str):
+    if city_name.lower() in city_coordinates_cache:
+        return city_coordinates_cache[city_name.lower()]
 
     response = requests.get(f"https://nominatim.openstreetmap.org/search?city={city_name}&format=json", headers=headers)
     time.sleep(1)  # To avoid hitting the Nominatim API too quickly, they recommend a delay of at least 1 second between requests.
@@ -25,7 +25,7 @@ def get_city_coordinates(city_name):
         print(f"No data found for {city_name}.")
         return None
     
-    city_coordinates_cache[city_name] = data[0].get("lat"), data[0].get("lon")
+    city_coordinates_cache[city_name.lower()] = data[0].get("lat"), data[0].get("lon")
     return data[0].get("lat"), data[0].get("lon")
 
 def get_weather_data(city_coordinates):
