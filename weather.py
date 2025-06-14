@@ -6,7 +6,13 @@ headers = {
     "Accept": "application/json"
 }
 
+city_coordinates_cache = {}
+weather_data_cache = {}
+
 def get_city_coordinates(city_name):
+    if city_name in city_coordinates_cache:
+        return city_coordinates_cache[city_name]
+
     response = requests.get(f"https://nominatim.openstreetmap.org/search?city={city_name}&format=json", headers=headers)
     time.sleep(1)  # To avoid hitting the Nominatim API too quickly, they recommend a delay of at least 1 second between requests.
 
@@ -18,12 +24,18 @@ def get_city_coordinates(city_name):
     if len(data) == 0:
         print(f"No data found for {city_name}.")
         return None
-
+    
+    city_coordinates_cache[city_name] = data[0].get("lat"), data[0].get("lon")
     return data[0].get("lat"), data[0].get("lon")
 
 def get_weather_data(city_coordinates):
     if city_coordinates[0] is None or city_coordinates[1] is None:
         return None
+    
+    coord_key = f"{city_coordinates[0]},{city_coordinates[1]}"
+    if coord_key in weather_data_cache:
+        return weather_data_cache[coord_key]
+
 
     response = requests.get(f"https://api.met.no/weatherapi/locationforecast/2.0/compact?lat={city_coordinates[0]}&lon={city_coordinates[1]}", headers=headers)
 
@@ -31,6 +43,7 @@ def get_weather_data(city_coordinates):
         print("Error fetching data from the forecast API. Reason:", response.reason)
         return None
 
+    weather_data_cache[coord_key] = response.json()
     return response.json()
 
 def parse_weather_data(city_name, current_weather_details, weather_description):
